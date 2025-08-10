@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>سجل جرعات النظائر المشعة - PET/CT (Fixed Table v2)</title>
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
+      --acc:#22c55e; --acc2:#38bdf8; --warn:#f59e0b; --danger:#ef4444; --ring:#334155;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,var(--bg),#0b1220); color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","Cairo","Noto Sans Arabic",Arial;
+      -webkit-font-smoothing:antialiased; line-height:1.45;
+      padding: env(safe-area-inset-top) 12px env(safe-area-inset-bottom);
+    }
+    .container{max-width:1100px;margin:0 auto; padding:24px 10px}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+    h1{font-size:clamp(20px,3vw,28px);margin:0}
+    .badge{font-size:12px;color:var(--muted)}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid var(--ring);
+      border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.04);margin-bottom:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .field{flex:1 1 180px;display:flex;flex-direction:column;gap:6px;min-width:170px}
+    label{font-size:13px;color:var(--muted)}
+    input,select,textarea{background:#0b1220;color:var(--ink);border:1px solid var(--ring);
+      border-radius:10px;padding:10px 12px;font-size:15px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--acc2);box-shadow:0 0 0 3px rgba(56,189,248,.2)}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .btn{appearance:none;border:none;cursor:pointer;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;
+      background:#0b1220;border:1px solid var(--ring);color:var(--ink)}
+    .btn.primary{background:linear-gradient(90deg,var(--acc2),#60a5fa);color:#001018;border-color:transparent}
+    .btn.success{background:linear-gradient(90deg,var(--acc),#84cc16);color:#001b0b;border-color:transparent}
+    .btn.warn{background:linear-gradient(90deg,var(--warn),#f97316);color:#211000;border-color:transparent}
+    .btn.danger{background:linear-gradient(90deg,var(--danger),#fb7185);color:#2a0003;border-color:transparent}
+    .btn.ghost{background:#0b1220;border:1px dashed var(--ring)}
+    .table-wrap{overflow:auto;border:1px solid var(--ring);border-radius:12px;background:#0b1220}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;table-layout:fixed}
+    thead th{position:sticky;top:0;background:#0b1220;z-index:1;text-align:center;font-size:13px;color:var(--muted);
+      padding:10px 8px;border-bottom:1px solid var(--ring)}
+    tbody td{padding:8px;border-bottom:1px solid #0f1b2e;vertical-align:middle;text-align:center}
+    tbody tr:hover{background:rgba(56,189,248,0.06)}
+    /* Keep <td> as table-cell; only style the children */
+    td.cell{ /* no display override */ }
+    td.cell > input, td.cell > select{
+      width:100%; max-width:100%; box-sizing:border-box;
+      background:#0a1020; border:1px solid #1e293b; padding:8px 10px; border-radius:8px; font-size:14px;
+    }
+    td.cell > input[type='number']{ text-align:center }
+    .meta{color:var(--muted);font-size:12px}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+    .kpis{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi{flex:1 1 200px;background:#0b1220;border:1px solid var(--ring);border-radius:10px;padding:10px}
+    .kpi h3{margin:0 0 6px 0;font-size:14px;color:var(--muted)}
+    .kpi .val{font-size:20px;font-weight:700}
+    .divider{height:1px;background:var(--ring);margin:12px 0}
+    .note{font-size:12px;color:var(--muted)}
+    @media print{
+      body{background:white;color:black;padding:0}
+      .card,.kpi{box-shadow:none;border-color:#ccc}
+      .btns,.badge{display:none!important}
+      .container{max-width:100%;padding:0 10px}
+      header{border-bottom:1px solid #ccc;padding-bottom:8px;margin-bottom:8px}
+      .table-wrap{overflow:visible}
+      td.cell > input, td.cell > select, input, select, textarea{border:1px solid #aaa;background:white;color:black}
+      footer{color:#333}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>سجل جرعات اليوم – PET/CT</h1>
+        <div class="badge">متوافق مع iOS • يعمل بدون إنترنت • يدعم الحفظ المحلي</div>
+      </div>
+      <div class="row" style="min-width:280px; justify-content:flex-end">
+        <div class="field" style="min-width:220px">
+          <label for="date">تاريخ اليوم</label>
+          <input id="date" type="date" />
+        </div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <div class="field">
+          <label for="doseCount">هل يوجد جرعة واحدة أم أكثر؟ (عدد الجرعات المستلمة)</label>
+          <input id="doseCount" type="number" min="0" step="1" placeholder="أدخل عدد الجرعات" />
+          <div class="btns">
+            <button class="btn primary" id="applyDoseCount">تكوين الجدول</button>
+            <button class="btn ghost" id="addDose">+ إضافة جرعة</button>
+            <button class="btn danger" id="removeSelected">حذف الجرعة المُحددة</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="planned">المخطط حقنه (عدد المرضى)</label>
+          <input id="planned" type="number" min="0" step="1" placeholder="مثلاً 12" />
+          <div class="note">يمكنك تركه فارغًا وسيُحسب من مجموع "المركز طلب" بالأسفل.</div>
+        </div>
+        <div class="field">
+          <label>تم حقن كام حالة؟ (حسب المادة)</label>
+          <div class="row">
+            <div class="field">
+              <label for="fdgInjected">FDG</label>
+              <input id="fdgInjected" type="number" min="0" step="1" value="0">
+            </div>
+            <div class="field">
+              <label for="pesmaInjected">PESMA</label>
+              <input id="pesmaInjected" type="number" min="0" step="1" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <h2 style="margin:4px 0; font-size:18px">جدول استلام الجرعات</h2>
+        <div class="btns">
+          <button class="btn ghost" id="duplicateLast">تكرار آخر صف</button>
+          <button class="btn warn" id="clearTable">تفريغ الجدول</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="doseTable">
+          <thead>
+            <tr>
+              <th style="width:70px">اختيار</th>
+              <th style="width:60px">#</th>
+              <th style="width:140px">وقت الاستلام</th>
+              <th style="width:140px">المادة</th>
+              <th style="width:160px">النشاط (mCi)</th>
+              <th style="width:180px">المركز طلب (حالات)</th>
+              <th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div class="field">
+          <label>إجمالي النشاط (mCi)</label>
+          <input id="totalActivity" type="number" readonly>
+        </div>
+        <div class="field">
+          <label>إجمالي &ldquo;المركز طلب&rdquo; (حالات)</label>
+          <input id="totalRequested" type="number" readonly>
+        </div>
+        <div class="field">
+          <label>إجمالي الصفوف</label>
+          <input id="totalRows" type="number" readonly>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin:4px 0; font-size:18px">الملخص</h2>
+      <div class="kpis">
+        <div class="kpi">
+          <h3>المخطط حقنه</h3>
+          <div class="val" id="kpiPlanned">0</div>
+          <div class="meta" id="kpiPlannedMeta">يدويًا أو من مجموع "المركز طلب"</div>
+        </div>
+        <div class="kpi">
+          <h3>تم حقنه</h3>
+          <div class="val" id="kpiInjected">0</div>
+        </div>
+        <div class="kpi">
+          <h3>لم يتم حقنه</h3>
+          <div class="val" id="kpiNotInjected">0</div>
+          <div class="meta">المخطط − تم</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="btns">
+        <button class="btn success" id="saveDay">حفظ اليوم</button>
+        <button class="btn" id="loadDay">استرجاع اليوم</button>
+        <button class="btn primary" id="generateReport">توليد تقرير</button>
+        <button class="btn ghost" id="printReport">تصدير PDF/طباعة</button>
+        <button class="btn danger" id="resetAll">مسح كل البيانات</button>
+      </div>
+      <div class="note">الحفظ محليًا على الجهاز. للتصدير PDF استخدم زر الطباعة بعد توليد التقرير.</div>
+    </section>
+
+    <footer>
+      البرنامج بواسطة: <strong>ياسين سمير خليفه</strong> — فيزيائي طبي بجمهورية مصر العربية.
+    </footer>
+  </div>
+
+  <template id="rowTemplate">
+    <tr>
+      <td class="cell"><input type="checkbox" class="row-check"></td>
+      <td class="cell idx"></td>
+      <td class="cell"><input type="time" class="time" required></td>
+      <td class="cell">
+        <select class="material">
+          <option value="FDG">FDG</option>
+          <option value="PESMA">PESMA</option>
+        </select>
+      </td>
+      <td class="cell"><input type="number" class="activity" min="0" step="0.1" placeholder="0.0"></td>
+      <td class="cell"><input type="number" class="requested" min="0" step="1" placeholder="0"></td>
+      <td class="cell"><input type="text" class="note" placeholder="ملاحظات اختيارية"></td>
+    </tr>
+  </template>
+
+  <script>
+    (function(){
+      const dateEl = document.getElementById('date');
+      const doseCountEl = document.getElementById('doseCount');
+      const applyDoseCountBtn = document.getElementById('applyDoseCount');
+      const addDoseBtn = document.getElementById('addDose');
+      const removeSelectedBtn = document.getElementById('removeSelected');
+      const duplicateLastBtn = document.getElementById('duplicateLast');
+      const clearTableBtn = document.getElementById('clearTable');
+      const table = document.getElementById('doseTable').querySelector('tbody');
+      const rowTpl = document.getElementById('rowTemplate');
+
+      const plannedEl = document.getElementById('planned');
+      const fdgInjectedEl = document.getElementById('fdgInjected');
+      const pesmaInjectedEl = document.getElementById('pesmaInjected');
+
+      const totalActivityEl = document.getElementById('totalActivity');
+      const totalRequestedEl = document.getElementById('totalRequested');
+      const totalRowsEl = document.getElementById('totalRows');
+
+      const kpiPlanned = document.getElementById('kpiPlanned');
+      const kpiNotInjected = document.getElementById('kpiNotInjected');
+      const kpiInjected = document.getElementById('kpiInjected');
+      const kpiPlannedMeta = document.getElementById('kpiPlannedMeta');
+
+      const saveBtn = document.getElementById('saveDay');
+      const loadBtn = document.getElementById('loadDay');
+      const genBtn = document.getElementById('generateReport');
+      const printBtn = document.getElementById('printReport');
+      const resetBtn = document.getElementById('resetAll');
+
+      const todayISO = new Date().toISOString().slice(0,10);
+      dateEl.value = todayISO;
+
+      function rowElements(tr){
+        return {
+          check: tr.querySelector('.row-check'),
+          idx: tr.querySelector('.idx'),
+          time: tr.querySelector('.time'),
+          material: tr.querySelector('.material'),
+          activity: tr.querySelector('.activity'),
+          requested: tr.querySelector('.requested'),
+          note: tr.querySelector('.note'),
+        };
+      }
+
+      function renumber(){
+        [...table.rows].forEach((tr,i)=> tr.querySelector('.idx').textContent = i+1);
+        totalRowsEl.value = table.rows.length;
+      }
+
+      function addRow(prefill){
+        const node = document.importNode(rowTpl.content, true);
+        table.appendChild(node);
+        const tr = table.lastElementChild;
+        const els = rowElements(tr);
+        if(prefill){
+          if(prefill.time) els.time.value = prefill.time;
+          if(prefill.material) els.material.value = prefill.material;
+          if(prefill.activity!==undefined) els.activity.value = prefill.activity;
+          if(prefill.requested!==undefined) els.requested.value = prefill.requested;
+          if(prefill.note) els.note.value = prefill.note;
+        }else{
+          const now = new Date(); now.setSeconds(0,0);
+          const m = now.getMinutes(); now.setMinutes(m - (m%5));
+          els.time.value = now.toTimeString().slice(0,5);
+        }
+        tr.addEventListener('input', recalcTotals);
+        renumber();
+        recalcTotals();
+      }
+
+      function removeSelected(){
+        const rows = [...table.rows];
+        let removed = 0;
+        rows.forEach(r=>{
+          if(r.querySelector('.row-check').checked){ r.remove(); removed++; }
+        });
+        if(!removed) alert('من فضلك اختر صفًا واحدًا على الأقل للحذف.');
+        renumber(); recalcTotals();
+      }
+
+      function clearTable(){
+        if(confirm('تفريغ الجدول بالكامل؟')){
+          table.innerHTML=''; renumber(); recalcTotals();
+        }
+      }
+
+      function duplicateLast(){
+        const rows = [...table.rows];
+        if(rows.length===0){ addRow(); return; }
+        const els = rowElements(rows[rows.length-1]);
+        addRow({
+          time: els.time.value, material: els.material.value,
+          activity: els.activity.value, requested: els.requested.value, note: els.note.value
+        });
+      }
+
+      function buildRowsFromCount(n){
+        const current = table.rows.length;
+        n = Math.max(0, Number(n)||0);
+        if(n>current){ for(let i=current;i<n;i++) addRow(); }
+        else if(n<current){ for(let i=current;i>n;i--) table.lastElementChild?.remove(); renumber(); recalcTotals(); }
+      }
+
+      function recalcTotals(){
+        let totalActivity = 0, totalRequested = 0;
+        [...table.rows].forEach(tr=>{
+          const els = rowElements(tr);
+          totalActivity += Number(els.activity.value)||0;
+          totalRequested += Number(els.requested.value)||0;
+        });
+        totalActivityEl.value = +totalActivity.toFixed(1);
+        totalRequestedEl.value = totalRequested;
+
+        const manualPlanned = Number(plannedEl.value)||0;
+        const planned = manualPlanned>0 ? manualPlanned : totalRequested;
+        kpiPlanned.textContent = planned;
+        kpiPlannedMeta.textContent = manualPlanned>0 ? 'مدخل يدويًا' : 'محسوب من مجموع \"المركز طلب\"';
+
+        const injected = (Number(fdgInjectedEl.value)||0) + (Number(pesmaInjectedEl.value)||0);
+        kpiInjected.textContent = injected;
+        kpiNotInjected.textContent = Math.max(planned - injected, 0);
+      }
+
+      function getDayKey(){ return 'petct_day_' + (dateEl.value || todayISO); }
+      function serialize(){
+        return {
+          date: dateEl.value,
+          planned: plannedEl.value,
+          fdgInjected: fdgInjectedEl.value,
+          pesmaInjected: pesmaInjectedEl.value,
+          rows: [...table.rows].map(tr=>{
+            const e = rowElements(tr);
+            return {time:e.time.value, material:e.material.value, activity:e.activity.value, requested:e.requested.value, note:e.note.value};
+          })
+        };
+      }
+      function deserialize(data){
+        dateEl.value = data.date || todayISO;
+        plannedEl.value = data.planned || '';
+        fdgInjectedEl.value = data.fdgInjected || 0;
+        pesmaInjectedEl.value = data.pesmaInjected || 0;
+        table.innerHTML='';
+        (data.rows||[]).forEach(r=> addRow(r));
+        renumber(); recalcTotals();
+      }
+      function saveDay(){ localStorage.setItem(getDayKey(), JSON.stringify(serialize())); alert('تم الحفظ ✅'); }
+      function loadDay(){
+        const raw = localStorage.getItem(getDayKey());
+        if(!raw) return alert('لا توجد بيانات محفوظة لهذا التاريخ.');
+        deserialize(JSON.parse(raw)); alert('تم الاسترجاع ✅');
+      }
+      function resetAll(){
+        if(!confirm('مسح كل البيانات لهذا التاريخ؟')) return;
+        table.innerHTML=''; plannedEl.value=''; fdgInjectedEl.value=0; pesmaInjectedEl.value=0;
+        localStorage.removeItem(getDayKey()); renumber(); recalcTotals();
+      }
+      function generateReport(){ recalcTotals(); window.scrollTo({top:0,behavior:'smooth'}); alert('تم توليد التقرير.'); }
+      function printReport(){ recalcTotals(); window.print(); }
+
+      // Bindings
+      applyDoseCountBtn.addEventListener('click', ()=> buildRowsFromCount(Number(doseCountEl.value)||0));
+      addDoseBtn.addEventListener('click', addRow);
+      removeSelectedBtn.addEventListener('click', removeSelected);
+      duplicateLastBtn.addEventListener('click', duplicateLast);
+      clearTableBtn.addEventListener('click', clearTable);
+      plannedEl.addEventListener('input', recalcTotals);
+      fdgInjectedEl.addEventListener('input', recalcTotals);
+      pesmaInjectedEl.addEventListener('input', recalcTotals);
+      document.getElementById('saveDay').addEventListener('click', saveDay);
+      document.getElementById('loadDay').addEventListener('click', loadDay);
+      document.getElementById('resetAll').addEventListener('click', resetAll);
+      document.getElementById('generateReport').addEventListener('click', generateReport);
+      document.getElementById('printReport').addEventListener('click', printReport);
+
+      // Start with one row
+      addRow();
+    })();
+  </script>
+</body>
+</html>
